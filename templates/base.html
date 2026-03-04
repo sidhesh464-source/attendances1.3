@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="navbar">
+        <div class="logo">Smart Attendance</div>
+        <button class="mobile-nav-toggle" id="mobile-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="menu" id="nav-menu">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('home') }}">Home</a>
+
+            {% if current_user.role == 'student' %}
+            <a href="{{ url_for('enroll_class') }}">Enrollment</a>
+            <a href="{{ url_for('student_attendance') }}">Attendance</a>
+            <a href="{{ url_for('student_profile') }}">Profile</a>
+            {% elif current_user.role == 'faculty' %}
+            <a href="{{ url_for('take_attendance') }}">Take Attendance</a>
+            <a href="{{ url_for('faculty_search_students') }}">Search Students</a>
+            <a href="{{ url_for('faculty_profile') }}">Profile</a>
+            {% elif current_user.role == 'principal' %}
+            <a href="{{ url_for('principal_search_students') }}">Students</a>
+            <a href="{{ url_for('principal_profile') }}">Profile</a>
+            {% elif current_user.role == 'admin' %}
+            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+            {% endif %}
+
+            <a href="{{ url_for('change_password') }}">Password</a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+            {% else %}
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('role_selection') }}">Login</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="table-container">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <footer>
+        <p></p>
+    </footer>
+    <script>
+        document.getElementById('mobile-toggle').addEventListener('click', function () {
+            document.getElementById('nav-menu').classList.toggle('active');
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('fa-bars')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function (event) {
+            const menu = document.getElementById('nav-menu');
+            const toggle = document.getElementById('mobile-toggle');
+            if (!menu.contains(event.target) && !toggle.contains(event.target)) {
+                menu.classList.remove('active');
+                const icon = toggle.querySelector('i');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+    </script>
+</body>
+
+</html>

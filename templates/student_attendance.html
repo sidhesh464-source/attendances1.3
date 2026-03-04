@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-section" style="margin-bottom: 2rem;">
+    <h2><i class="fas fa-calendar-check"></i> My Attendance Summary</h2>
+    <p style="color: #636e72;">Overview of your academic presence across all classes.</p>
+</div>
+
+<!-- Attendance Table (Full Width) -->
+<div class="card" style="padding: 2rem; margin-bottom: 2rem;">
+    <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-list-ul"></i> Detailed Records</h3>
+    <table style="margin-top: 0;">
+        <thead>
+            <tr>
+                <th>Class Name</th>
+                <th>Attendance</th>
+                <th>Percentage</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in summary %}
+            <tr>
+                <td style="font-weight: 600;">{{ item.class_name }}</td>
+                <td>{{ item.attended }} / {{ item.total_classes }}</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div
+                            style="flex: 1; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; min-width: 60px; --progress: {{ item.percentage }}%;">
+                            <div class="{% if item.percentage >= 90 %}bg-success{% elif item.percentage >= 80 %}bg-warning{% else %}bg-danger{% endif %}"
+                                style="width: var(--progress); height: 100%;"></div>
+                        </div>
+                        <span style="font-weight: bold; min-width: 45px;">{{ item.percentage }}%</span>
+                    </div>
+                </td>
+                <td>
+                    {% if item.percentage >= 90 %}
+                    <span class="status-green">Excellent</span>
+                    {% elif item.percentage >= 80 %}
+                    <span class="status-yellow">Good</span>
+                    {% else %}
+                    <span class="status-red">Low</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('student_attendance_details', class_id=item.class_id) }}" class="btn"
+                        style="padding: 6px 14px; font-size: 0.8rem; border-radius: 8px; background: var(--secondary-gradient);">
+                        Details
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 3rem;">No attendance records found yet. Enroll in
+                    classes first!</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

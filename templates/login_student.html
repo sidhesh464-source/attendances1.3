@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="login-container">
+    <div class="card">
+        <h2 style="text-align: center;">Student Login</h2>
+        <form method="POST">
+            <label>Registration No</label>
+            <input type="text" name="username" placeholder="Enter Reg No" required>
+
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Enter Password" required>
+
+            <button type="submit" style="width: 100%;">Login</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

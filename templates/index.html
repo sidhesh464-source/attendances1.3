@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="hero-section">
+    <h1>Welcome to Smart Attendance</h1>
+    <p>Efficiently manage attendance, classes, and communication for your institution.</p>
+</div>
+
+<div class="role-selection">
+    <a href="{{ url_for('login_student') }}" class="role-card">
+        <i class="fas fa-user-graduate"></i>
+        <h2>Student</h2>
+        <p>Access classes & attendance.</p>
+    </a>
+    <a href="{{ url_for('login_faculty') }}" class="role-card">
+        <i class="fas fa-chalkboard-teacher"></i>
+        <h2>Faculty</h2>
+        <p>Manage classes & attendance.</p>
+    </a>
+    <a href="{{ url_for('login_principal') }}" class="role-card">
+        <i class="fas fa-user-tie"></i>
+        <h2>Principal</h2>
+        <p>Institute overview & management.</p>
+    </a>
+    <a href="{{ url_for('login_admin') }}" class="role-card">
+        <i class="fas fa-user-shield"></i>
+        <h2>Admin</h2>
+        <p>System administration.</p>
+    </a>
+</div>
+{% endblock %}

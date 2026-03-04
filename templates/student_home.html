@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Welcome, {{ current_user.name }}</h1>
+<div class="card">
+    <h3>Academic Calendar</h3>
+
+    <div class="calendar">
+        <div class="calendar-header">
+            <span id="month-year"></span>
+        </div>
+        <div class="calendar-body">
+            <div class="calendar-weekdays">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+            <div class="calendar-days" id="calendar-days"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <h3><i class="fas fa-bell"></i> Notifications from Principal</h3>
+    {% if notifications %}
+    <div class="notification-list">
+        {% for msg in notifications %}
+        <div class="notification-item" style="padding: 1rem; border-bottom: 1px solid #eee;">
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">
+                <i class="far fa-clock"></i> {{ msg.timestamp.strftime('%Y-%m-%d %H:%M') }}
+            </p>
+            <p>{{ msg.content }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: #666; font-style: italic;">No new notifications.</p>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const monthYear = document.getElementById('month-year');
+        const calendarDays = document.getElementById('calendar-days');
+
+        const date = new Date();
+        const currentMonth = date.getMonth();
+        const currentYear = date.getFullYear();
+
+        const months = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        monthYear.innerText = `${months[currentMonth]} ${currentYear}`;
+
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+        // Empty slots for previous month
+        for (let i = 0; i < firstDay; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.classList.add('empty');
+            calendarDays.appendChild(emptyDiv);
+        }
+
+        // Days of current month
+        for (let i = 1; i <= lastDate; i++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.innerText = i;
+            if (i === date.getDate()) {
+                dayDiv.classList.add('today');
+            }
+            calendarDays.appendChild(dayDiv);
+        }
+    });
+</script>
+{% endblock %}

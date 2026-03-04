@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Confirm Attendance</h2>
+<p>Class: <strong>{{ school_class.name }}</strong></p>
+
+<div class="card">
+    <h3>Absentees List</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Register No</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set absent_count = namespace(value=0) %}
+            {% for item in students %}
+            {% if item.status == 'Absent' %}
+            {% set absent_count.value = absent_count.value + 1 %}
+            <tr>
+                <td>{{ item.student.name }}</td>
+                <td>{{ item.student.username }}</td>
+                <td class="status-red">Absent</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+
+            {% if absent_count.value == 0 %}
+            <tr>
+                <td colspan="3" style="text-align: center;">Everyone Present!</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div style="margin-top: 2rem;">
+        <form method="POST" action="{{ url_for('submit_attendance') }}">
+            <input type="hidden" name="class_id" value="{{ school_class.id }}">
+
+            <!-- Pass the data through validation -->
+            {% for item in students %}
+            <input type="hidden" name="status_{{ item.student.id }}" value="{{ item.status }}">
+            {% endfor %}
+
+            <button type="submit" class="btn btn-success">Confirm & Submit</button>
+            <a href="javascript:history.back()" class="btn btn-danger" style="float: right;">Go Back</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

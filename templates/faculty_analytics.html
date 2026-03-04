@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-section"
+    style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    <h2><i class="fas fa-chart-line"></i> Analytics: {{ school_class.name }}</h2>
+    <a href="{{ url_for('export_pdf', class_id=school_class.id) }}" class="btn btn-primary"
+        style="background: var(--primary-gradient); border-radius: 30px;">
+        <i class="fas fa-file-pdf"></i> Export Detailed Report
+    </a>
+</div>
+
+<div class="card" style="padding: 2.5rem; border-radius: 24px;">
+    <div style="margin-bottom: 2rem;">
+        <h3 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Attendance Trends</h3>
+        <p style="color: #636e72; margin: 0.5rem 0 0 0;">Visualizing presence and absence patterns over time</p>
+    </div>
+
+    <div style="position: relative; height: 450px; width: 100%;">
+        <canvas id="attendanceChart"></canvas>
+        <!-- Safe Data Injection via JSON Script Tags -->
+        <script id="dates-data" type="application/json">{{ dates | tojson | safe }}</script>
+        <script id="present-data" type="application/json">{{ present_counts | tojson | safe }}</script>
+        <script id="absent-data" type="application/json">{{ absent_counts | tojson | safe }}</script>
+    </div>
+</div>
+
+<style>
+    .header-section h2 {
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+    }
+
+    .chart-tooltip {
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        color: var(--text-color) !important;
+        padding: 12px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Extract data from JSON script tags
+        let dates, presentData, absentData;
+        try {
+            dates = JSON.parse(document.getElementById('dates-data').textContent);
+            presentData = JSON.parse(document.getElementById('present-data').textContent);
+            absentData = JSON.parse(document.getElementById('absent-data').textContent);
+        } catch (e) {
+            console.error("Failed to parse analytics data:", e);
+            return;
+        }
+
+        const canvas = document.getElementById('attendanceChart');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+
+            // Create gradients
+            const presentGradient = ctx.createLinearGradient(0, 0, 0, 400);
+            presentGradient.addColorStop(0, 'rgba(17, 153, 142, 0.4)');
+            presentGradient.addColorStop(1, 'rgba(56, 239, 125, 0.05)');
+
+            const absentGradient = ctx.createLinearGradient(0, 0, 0, 400);
+            absentGradient.addColorStop(0, 'rgba(240, 147, 251, 0.4)');
+            absentGradient.addColorStop(1, 'rgba(245, 87, 108, 0.05)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Present',
+                            data: presentData,
+                            borderColor: '#11998e',
+                            backgroundColor: presentGradient,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#11998e',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Absent',
+                            data: absentData,
+                            borderColor: '#f5576c',
+                            backgroundColor: absentGradient,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#f5576c',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    family: "'Poppins', sans-serif",
+                                    size: 13,
+                                    weight: '600'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#2d3436',
+                            bodyColor: '#2d3436',
+                            borderColor: 'rgba(0, 0, 0, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            boxPadding: 8,
+                            usePointStyle: true,
+                            titleFont: {
+                                family: "'Poppins', sans-serif",
+                                size: 14,
+                                weight: '700'
+                            },
+                            bodyFont: {
+                                family: "'Poppins', sans-serif",
+                                size: 13
+                            },
+                            callbacks: {
+                                label: function (context) {
+                                    const index = context.dataIndex;
+                                    const present = presentData[index];
+                                    const absent = absentData[index];
+                                    const total = present + absent;
+                                    const value = context.raw;
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += value + ' (' + percentage + '%)';
+                                    return label;
+                                },
+                                footer: function (tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const total = presentData[index] + absentData[index];
+                                    return 'Total Strength: ' + total;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Poppins', sans-serif"
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                borderDash: [5, 5]
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    family: "'Poppins', sans-serif"
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

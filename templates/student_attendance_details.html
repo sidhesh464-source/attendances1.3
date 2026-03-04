@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Attendance Details: {{ school_class.name }}</h2>
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Marked By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr>
+                <td>{{ record.date }}</td>
+                <td>
+                    {% if record.status == 'Present' %}
+                    <span class="status-green">Present</span>
+                    {% else %}
+                    <span class="status-red">Absent</span>
+                    {% endif %}
+                </td>
+                <td>{{ record.faculty.name }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">No records found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('student_attendance') }}" class="btn" style="margin-top: 1rem;">Back</a>
+</div>
+{% endblock %}

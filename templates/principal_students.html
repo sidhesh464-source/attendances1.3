@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Search Students</h2>
+
+<div class="card">
+    <form method="GET" action="{{ url_for('principal_search_students') }}" style="display: flex; gap: 1rem;">
+        <input type="text" name="query" placeholder="Enter Student Name" value="{{ query if query else '' }}"
+            style="flex: 1; margin: 0;">
+        <button type="submit" style="margin: 0;">Search</button>
+    </form>
+</div>
+
+{% if query %}
+<div class="card">
+    <h3>Search Results for "{{ query }}"</h3>
+    {% if students %}
+    <table>
+        <thead>
+            <tr>
+                <th>Reg No</th>
+                <th>Name</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.username }}</td>
+                <td>{{ student.name }}</td>
+                <td>
+                    <a href="{{ url_for('principal_student_details', student_id=student.id) }}" class="btn"
+                        style="padding: 5px 15px;">View Details</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No students found matching "{{ query }}".</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

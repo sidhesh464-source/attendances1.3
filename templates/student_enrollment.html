@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2>Class Enrollment</h2>
+    <form method="POST">
+        <label>Student Name</label>
+        <input type="text" value="{{ current_user.name }}" readonly style="background-color: #f0f0f0;">
+
+        <label>Registration No</label>
+        <input type="text" value="{{ current_user.username }}" readonly style="background-color: #f0f0f0;">
+
+        <label>Select Class</label>
+        <select name="class" required>
+            <option value="" disabled selected>Select a class...</option>
+            {% for school_class in school_classes %}
+            <option value="{{ school_class.id }}">{{ school_class.name }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" style="margin-top: 1rem;">Enroll Now</button>
+    </form>
+</div>
+{% endblock %}

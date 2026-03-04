@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-section" style="margin-bottom: 2rem;">
+    <h2><i class="fas fa-user-shield"></i> Admin Dashboard</h2>
+    <p style="color: #636e72;">Manage your institution's users, classes, and schedules.</p>
+</div>
+
+<div style="display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 2rem;">
+    <!-- Class Statistics Chart -->
+    <div class="card" style="flex: 2; min-width: 400px; padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3><i class="fas fa-chart-pie"></i> Enrollment Distribution</h3>
+            <span class="status-green" style="font-size: 0.8rem;">Live Data</span>
+        </div>
+        <div style="position: relative; height: 300px;">
+            <canvas id="classChart"></canvas>
+            <!-- Safe Data Injection via JSON Script Tag -->
+            <script id="class-stats-data" type="application/json">
+                {{ class_stats | tojson | safe }}
+            </script>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card" style="flex: 1; min-width: 300px; padding: 2rem;">
+        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+            <a href="{{ url_for('add_user', role_type='student') }}" class="btn"
+                style="background: var(--primary-gradient);">
+                <i class="fas fa-user-plus"></i> Add Student
+            </a>
+            <a href="{{ url_for('add_user', role_type='faculty') }}" class="btn"
+                style="background: var(--secondary-gradient);">
+                <i class="fas fa-chalkboard-teacher"></i> Add Faculty
+            </a>
+            <a href="{{ url_for('add_user', role_type='principal') }}" class="btn"
+                style="background: var(--accent-gradient);">
+                <i class="fas fa-user-tie"></i> Add Principal
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<!-- Academic Calendar -->
+<div class="card" style="padding: 2rem; margin-bottom: 2rem;">
+    <h3><i class="fas fa-calendar-alt"></i> Academic Calendar</h3>
+    <div class="calendar"
+        style="width: 100%; margin-top: 1.5rem; box-shadow: none; border: 1px solid rgba(0,0,0,0.05);">
+        <div class="calendar-header" style="height: 60px; padding: 0 25px;">
+            <span id="month-year" style="font-size: 1.2rem;"></span>
+        </div>
+        <div class="calendar-body" style="padding: 2rem;">
+            <div class="calendar-weekdays" style="margin-bottom: 20px; padding-bottom: 15px;">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+            <div class="calendar-days" id="calendar-days"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="padding: 2.5rem; margin-bottom: 2rem;">
+    <h3 style="margin-bottom: 2rem;"><i class="fas fa-users-cog"></i> User Management</h3>
+
+    <div style="margin-bottom: 3rem;">
+        <h4
+            style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-user-graduate"></i> Students
+        </h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Reg No</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users if user.role == 'student' %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }} {% if user.is_blocked %}<span class="status-red"
+                            style="font-size: 0.7rem;">(Blocked)</span>{% endif %}</td>
+                    <td>{{ user.username }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{{ url_for('toggle_block', user_id=user.id) }}"
+                                class="btn {% if user.is_blocked %}btn-success{% else %}btn-warning{% endif %}"
+                                style="padding: 6px 14px; font-size: 0.8rem; border-radius: 8px;">
+                                <i
+                                    class="fas {% if user.is_blocked %}fa-user-check{% else %}fa-user-slash{% endif %}"></i>
+                            </a>
+                            <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn btn-danger"
+                                style="padding: 6px 14px; font-size: 0.8rem; border-radius: 8px;"
+                                onclick="return confirm('Delete this student?')">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                    </td>
+
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 2rem;">No students found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-bottom: 3rem;">
+        <h4
+            style="color: var(--secondary-color); margin-bottom: 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-chalkboard-teacher"></i> Faculty
+        </h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Faculty ID</th>
+                    <th>Department</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users if user.role == 'faculty' %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }} {% if user.is_blocked %}<span class="status-red"
+                            style="font-size: 0.7rem;">(Blocked)</span>{% endif %}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.department or 'N/A' }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{{ url_for('toggle_block', user_id=user.id) }}"
+                                class="btn {% if user.is_blocked %}btn-success{% else %}btn-warning{% endif %}"
+                                style="padding: 6px 14px; font-size: 0.8rem; border-radius: 8px;">
+                                <i
+                                    class="fas {% if user.is_blocked %}fa-user-check{% else %}fa-user-slash{% endif %}"></i>
+                            </a>
+                            <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn btn-danger"
+                                style="padding: 6px 14px; font-size: 0.8rem; border-radius: 8px;"
+                                onclick="return confirm('Delete this faculty?')">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                    </td>
+
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 2rem;">No faculty found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h4
+            style="color: var(--accent-color); margin-bottom: 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-user-tie"></i> Principals
+        </h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users if user.role == 'principal' %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }} {% if user.is_blocked %}<span class="status-red"
+                            style="font-size: 0.7rem;">(Blocked)</span>{% endif %}</td>
+                    <td>{{ user.username }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{{ url_for('toggle_block', user_id=user.id) }}"
+                                class="btn {% if user.is_blocked %}btn-success{% else %}btn-warning{% endif %}"
+                                style="padding: 6px 14px; font-size: 0.8rem; border-radius: 8px;">
+                                <i
+                                    class="fas {% if user.is_blocked %}fa-user-check{% else %}fa-user-slash{% endif %}"></i>
+                            </a>
+                            <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn btn-danger"
+                                style="padding: 6px 14px; font-size: 0.8rem; border-radius: 8px;"
+                                onclick="return confirm('Delete this principal?')">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                    </td>
+
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 2rem;">No principals found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Calendar Logic
+        const monthYear = document.getElementById('month-year');
+        const calendarDays = document.getElementById('calendar-days');
+        const date = new Date();
+        const currentMonth = date.getMonth();
+        const currentYear = date.getFullYear();
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        if (monthYear && calendarDays) {
+            monthYear.innerText = `${months[currentMonth]} ${currentYear}`;
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
+            calendarDays.innerHTML = '';
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.classList.add('empty');
+                calendarDays.appendChild(emptyDiv);
+            }
+            for (let i = 1; i <= lastDate; i++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.innerText = i;
+                if (i === date.getDate()) dayDiv.classList.add('today');
+                calendarDays.appendChild(dayDiv);
+            }
+        }
+
+        // Chart Logic - Robust Data Extraction from JSON script tag
+        const dataElement = document.getElementById('class-stats-data');
+        if (!dataElement) return;
+
+        let stats = [];
+        try {
+            stats = JSON.parse(dataElement.textContent);
+        } catch (e) {
+            console.error("Failed to parse class stats:", e);
+            return;
+        }
+
+        if (stats && stats.length > 0) {
+            const labels = stats.map(s => s.name);
+            const data = stats.map(s => s.student_count);
+            const totalStudents = data.length > 0 ? data.reduce((a, b) => a + b, 0) : 0;
+
+            const canvas = document.getElementById('classChart');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: [
+                                '#667eea', '#764ba2', '#4facfe', '#00f2fe', '#f093fb', '#f5576c'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 20
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    font: { family: "'Poppins', sans-serif", size: 12 }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                titleColor: '#2d3436',
+                                bodyColor: '#2d3436',
+                                borderColor: 'rgba(0,0,0,0.1)',
+                                borderWidth: 1,
+                                padding: 12,
+                                callbacks: {
+                                    label: function (context) {
+                                        const val = context.raw;
+                                        const percentage = totalStudents > 0 ? ((val / totalStudents) * 100).toFixed(1) : 0;
+                                        return ` ${context.label}: ${val} students (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

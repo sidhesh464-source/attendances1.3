@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-section" style="margin-bottom: 2rem;">
+    <h2><i class="fas fa-user-graduate"></i> Student Profile</h2>
+    <p style="color: #636e72;">Detailed information and performance analysis.</p>
+</div>
+
+<div style="display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 2rem;">
+    <!-- Profile Info Card -->
+    <div class="card" style="flex: 1; min-width: 350px; padding: 2.5rem; border-radius: 24px;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div
+                style="width: 120px; height: 120px; border-radius: 50%; background: var(--primary-gradient); margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+                {% if student.photo %}
+                <img src="/{{ student.photo }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                {{ student.name[0].upper() }}
+                {% endif %}
+            </div>
+            <h3 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; color: #2d3436;">{{ student.name }}
+            </h3>
+            <span class="status-green" style="font-size: 0.9rem; padding: 5px 15px; border-radius: 20px;">Student</span>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <div
+                style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f2f6;">
+                <span style="color: #636e72; font-weight: 500;"><i class="fas fa-id-card"></i> Reg No</span>
+                <span style="color: #2d3436; font-weight: 600;">{{ student.username }}</span>
+            </div>
+            <div
+                style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f2f6;">
+                <span style="color: #636e72; font-weight: 500;"><i class="fas fa-envelope"></i> Email</span>
+                <span style="color: #2d3436; font-weight: 600;">{{ student.email or 'N/A' }}</span>
+            </div>
+            <div
+                style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f2f6;">
+                <span style="color: #636e72; font-weight: 500;"><i class="fas fa-phone"></i> Phone</span>
+                <span style="color: #2d3436; font-weight: 600;">{{ student.phone or 'N/A' }}</span>
+            </div>
+            <div
+                style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f2f6;">
+                <span style="color: #636e72; font-weight: 500;"><i class="fas fa-user"></i> Age</span>
+                <span style="color: #2d3436; font-weight: 600;">{{ student.age or 'N/A' }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                <span style="color: #636e72; font-weight: 500;"><i class="fas fa-venus-mars"></i> Gender</span>
+                <span style="color: #2d3436; font-weight: 600;">{{ student.gender or 'N/A' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Overview Card -->
+    <div class="card" style="flex: 2; min-width: 450px; padding: 2.5rem; border-radius: 24px;">
+        <h3 style="margin-bottom: 2rem; color: #2d3436; font-weight: 700; font-size: 1.5rem;"><i
+                class="fas fa-chart-bar"></i> Attendance Performance</h3>
+        <div style="position: relative; height: 350px; width: 100%;">
+            <canvas id="attendanceChart"></canvas>
+            <!-- Safe Data Injection -->
+            <script id="attendance-summary-data"
+                type="application/json">{{ attendance_summary | tojson | safe }}</script>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <table style="margin: 0; box-shadow: none; border: 1px solid #f1f2f6;">
+                <thead style="background: #f8f9fa;">
+                    <tr>
+                        <th style="color: #636e72; font-weight: 600;">Class</th>
+                        <th style="color: #636e72; font-weight: 600; text-align: center;">Attendance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for summary in attendance_summary %}
+                    <tr>
+                        <td style="font-weight: 500; font-size: 0.9rem;">{{ summary.class_name }}</td>
+                        <td style="text-align: center;">
+                            <span class="{% if summary.percentage >= 75 %}text-success{% else %}text-danger{% endif %}"
+                                style="font-weight: 700;">{{ summary.percentage }}%</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .header-section h2 {
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dataElement = document.getElementById('attendance-summary-data');
+        if (!dataElement) return;
+
+        let attendanceData = [];
+        try {
+            attendanceData = JSON.parse(dataElement.textContent);
+        } catch (e) {
+            console.error("Error parsing attendance data:", e);
+        }
+
+        if (attendanceData && attendanceData.length > 0) {
+            const labels = attendanceData.map(d => d.class_name);
+            const data = attendanceData.map(d => d.percentage);
+
+            const canvas = document.getElementById('attendanceChart');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Attendance Percentage',
+                            data: data,
+                            backgroundColor: labels.map((_, i) =>
+                                i % 2 === 0 ? 'rgba(102, 126, 234, 0.8)' : 'rgba(118, 75, 162, 0.8)'
+                            ),
+                            borderRadius: 10,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                titleColor: '#2d3436',
+                                bodyColor: '#2d3436',
+                                borderColor: 'rgba(0,0,0,0.1)',
+                                borderWidth: 1,
+                                padding: 12,
+                                displayColors: false,
+                                callbacks: {
+                                    label: function (context) {
+                                        return ` Performance: ${context.raw}%`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: {
+                                    drawBorder: false,
+                                    color: 'rgba(0,0,0,0.05)'
+                                },
+                                ticks: {
+                                    stepSize: 20,
+                                    font: { family: "'Poppins', sans-serif" }
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    font: { family: "'Poppins', sans-serif", weight: '600' }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

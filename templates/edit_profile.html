@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2>Edit Profile</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <label>Profile Photo</label>
+        <div style="margin-bottom: 1rem;">
+            {% if current_user.photo %}
+            <img src="{{ url_for('static', filename=current_user.photo) }}" alt="Profile Photo"
+                style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; display: block; margin-bottom: 0.5rem;">
+            <a href="{{ url_for('remove_photo') }}" class="btn btn-danger"
+                style="padding: 5px 10px; font-size: 0.7rem; margin-bottom: 0.5rem; display: inline-block;">Remove
+                Photo</a>
+            {% else %}
+            <div
+                style="width: 120px; height: 120px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; font-size: 2.5rem; color: #ccc;">
+                {{ current_user.name[0].upper() }}
+            </div>
+            {% endif %}
+            <input type="file" name="photo" accept="image/*">
+        </div>
+
+        <label>Full Name</label>
+        <input type="text" name="name" value="{{ current_user.name }}">
+
+        <label>Email ID</label>
+        <input type="email" name="email" value="{{ current_user.email or '' }}">
+
+        <label>Phone No</label>
+        <input type="text" name="phone" value="{{ current_user.phone or '' }}">
+
+        <label>Age</label>
+        <input type="number" name="age" value="{{ current_user.age or '' }}">
+
+        <label>Date of Birth</label>
+        <input type="date" name="dob" value="{{ current_user.dob or '' }}">
+
+        <label>Gender</label>
+        <select name="gender">
+            <option value="Male" {% if current_user.gender=='Male' %}selected{% endif %}>Male</option>
+            <option value="Female" {% if current_user.gender=='Female' %}selected{% endif %}>Female</option>
+        </select>
+
+        {% if current_user.role == 'student' %}
+        <label>Father's Name</label>
+        <input type="text" name="father_name" value="{{ current_user.father_name or '' }}">
+        <label>Mother's Name</label>
+        <input type="text" name="mother_name" value="{{ current_user.mother_name or '' }}">
+        {% endif %}
+
+        {% if current_user.role == 'faculty' %}
+        <label>Department</label>
+        <input type="text" name="department" value="{{ current_user.department or '' }}">
+        <label>Date of Join</label>
+        <input type="date" name="date_of_join" value="{{ current_user.date_of_join or '' }}">
+        {% endif %}
+
+        <button type="submit" class="btn btn-success" style="margin-top: 1rem; width: 100%;">Update
+            Successfully</button>
+    </form>
+</div>
+{% endblock %}

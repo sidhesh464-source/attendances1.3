@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Take Attendance</h2>
+
+<div class="card">
+    <form method="GET" action="{{ url_for('take_attendance') }}">
+        <label>Select Class:</label>
+        <select name="class_id" onchange="this.form.submit()">
+            <option value="">-- Select Class --</option>
+            {% for school_class in school_classes %}
+            <option value="{{ school_class.id }}" {% if selected_class_id|int==school_class.id %}selected{% endif %}>
+                {{ school_class.name }}
+            </option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+{% if students %}
+<div class="card">
+    <form method="POST" action="{{ url_for('confirm_attendance') }}">
+        <input type="hidden" name="class_id" value="{{ selected_class_id }}">
+
+        <table>
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Student Name</th>
+                    <th>Register No</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ student.name }}</td>
+                    <td>{{ student.username }}</td>
+                    <td>
+                        <label style="color: var(--success); cursor: pointer; margin-right: 15px;">
+                            <input type="radio" name="status_{{ student.id }}" value="Present" required checked> Present
+                        </label>
+                        <label style="color: var(--danger); cursor: pointer;">
+                            <input type="radio" name="status_{{ student.id }}" value="Absent" required> Absent
+                        </label>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 2rem; width: 100%;">Mark Attendance</button>
+    </form>
+</div>
+{% elif selected_class_id %}
+<div class="alert alert-warning">No students enrolled in this class yet.</div>
+{% endif %}
+
+{% endblock %}

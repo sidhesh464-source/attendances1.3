@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Principal Dashboard</h2>
+
+<div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+    <!-- Send Message Section -->
+    <div class="card" style="flex: 1; min-width: 300px;">
+        <h3>Send Notification</h3>
+        <form action="{{ url_for('send_message') }}" method="POST">
+            <label>Recipient Group</label>
+            <select name="recipient_type">
+                <option value="both">Both (Student & Faculty)</option>
+                <option value="student">Students Only</option>
+                <option value="faculty">Faculty Only</option>
+            </select>
+
+            <label>Message Content</label>
+            <textarea name="content" rows="4" placeholder="Type your message here..." required></textarea>
+
+            <button type="submit">Send Message</button>
+        </form>
+    </div>
+
+    <!-- Calendar Section -->
+    <div class="card" style="flex: 1; min-width: 300px;">
+        <h3>Academic Calendar</h3>
+        <div class="calendar">
+            <div class="calendar-header">
+                <span id="month-year"></span>
+            </div>
+            <div class="calendar-body">
+                <div class="calendar-weekdays">
+                    <div>Sun</div>
+                    <div>Mon</div>
+                    <div>Tue</div>
+                    <div>Wed</div>
+                    <div>Thu</div>
+                    <div>Fri</div>
+                    <div>Sat</div>
+                </div>
+                <div class="calendar-days" id="calendar-days"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const monthYear = document.getElementById('month-year');
+        const calendarDays = document.getElementById('calendar-days');
+
+        const date = new Date();
+        const currentMonth = date.getMonth();
+        const currentYear = date.getFullYear();
+
+        const months = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        monthYear.innerText = `${months[currentMonth]} ${currentYear}`;
+
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+        // Empty slots for previous month
+        for (let i = 0; i < firstDay; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.classList.add('empty');
+            calendarDays.appendChild(emptyDiv);
+        }
+
+        // Days of current month
+        for (let i = 1; i <= lastDate; i++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.innerText = i;
+            if (i === date.getDate()) {
+                dayDiv.classList.add('today');
+            }
+            calendarDays.appendChild(dayDiv);
+        }
+    });
+</script>
+
+<div class="card" style="margin-top: 2rem;">
+    <h3>Sent Messages History</h3>
+    {% if sent_messages %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>To</th>
+                <th>Message</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for msg in sent_messages %}
+            <tr>
+                <td>{{ msg.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ msg.recipient_type|capitalize }}</td>
+                <td>{{ msg.content }}</td>
+                <td>
+                    <a href="{{ url_for('delete_message', message_id=msg.id) }}" class="status-red"
+                        style="text-decoration: none;" onclick="return confirm('Delete this message?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No messages sent yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
